@@ -1,0 +1,230 @@
+  /*********************/
+ /** Global Settings **/
+/*********************/
+
+/* Fallback Settings */
+* {
+  box-sizing: border-box;
+  user-select: none;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+/**/
+
+/* Root Variables */
+:root {
+  --fg:                     hsl(240, 10%, 18%);
+  --highlight:              hsl(240, 10%, 25%);
+  
+  --text:                   hsl(240, 10%, 95%);
+
+  --load-low:               hsl(139, 54%, 53%);
+  --load-medium:            hsl(41, 100%, 77%);
+  --load-high:              hsl(348, 85%, 61%);
+  --load-extreme:           hsl(325, 100%, 25%);
+
+  --load-light-gray:        hsla(223, 28%, 92%, 0.95);
+  --load-gray:              hsla(229, 23%, 80%, 0.85);
+  --load-dark-gray:         hsla(225, 17%, 66%, 0.7);
+  --load-very-dark-gray:    hsla(200, 17%, 50%, 0.25);
+}
+/**/
+
+/* Load Levels */
+.load-low, .load-medium, .load-high, .load-extreme {
+  flex-shrink: 0;
+  margin-left: 0.33em;
+}
+
+.load-low     { color: var(--load-low); }
+.load-medium  { color: var(--load-medium); }
+.load-high    { color: var(--load-high); }
+.load-extreme { color: var(--load-extreme); }
+
+.gray.load-low  { color: var(--load-light-gray); }
+.gray.load-medium { color: var(--load-gray); }
+.gray.load-high   { color: var(--load-dark-gray); }
+.gray.load-extreme { color: var(--load-very-dark-gray); }
+/**/
+
+/* Icons - https://icons8.com/icons */
+.i {
+  /* Hex to Filter - https://codepen.io/sosuke/pen/Pjoqqp */
+  filter: invert(98%) sepia(97%) saturate(2878%) hue-rotate(177deg) brightness(107%) contrast(104%);
+  margin: 0.1em;
+}
+
+img {
+  pointer-events: none;
+}
+/**/
+
+/* Buttons */
+button{
+  background: transparent;
+  border: none !important;
+  cursor: pointer;
+}
+/**/
+
+/* Hover Details - Hidden Details */
+.hover-details {
+  display: inline-block;
+  color: var(--load-gray);
+  opacity: 0;
+  max-width: 0;
+}
+
+.fg:hover .hover-details {
+  opacity: 1;
+  max-width: 20em;
+}
+
+.fg:hover .label.hover-details {
+  margin-left: 1em;
+}
+/**/
+
+  /***************/
+ /** Main Body **/ 
+/***************/
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  color: var(--text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75em;
+  overflow: hidden;
+}
+
+.app {
+  display: flex;
+  position: absolute;
+  align-items: center;
+  justify-content: space-between;
+  top: 0; left: 0; right: 0; bottom: 0;
+  padding: 0 1%;
+}
+  
+.fg {
+  display: inline-flex;
+  align-items: center;
+  margin: 0.25em;
+  padding: 1em;
+  gap: 0.25em;
+  background: var(--fg);
+  transform: translateY(0.05em);
+}
+
+.fg:hover {
+  background: var(--highlight);
+  margin: 1em;
+  border-radius: 1em;
+  transform: scale(1.05) translateY(0.1em);
+}
+
+/* Structure */
+.left, .right, .center {
+  display: flex;
+  align-items: center;
+}
+
+.center {
+  flex: 1;
+  justify-content: center;
+  position: relative;
+}
+/**/
+
+  /**********/
+ /** Left **/
+/**********/
+
+/* Lock */
+.ovr.fg {
+  padding: 0.25em;
+  margin-right: 0.75em;
+  border-radius: 1em;
+}
+
+.ovr.fg:hover {
+  margin: 0 0.75em 0 0;
+}
+  
+.lock {
+  border-radius: 5em;
+  padding: 0.55em;
+  transition: background 0.3s ease;
+}
+
+.lock.paused {
+  background: var(--load-high);
+}
+
+.lock.active {
+  background: var(--load-low);
+}
+/**/
+
+/* Workspace Symbols */
+.focused {
+  font-size: 1.2em;
+  color: var(--text);
+}  
+
+.unfocused {
+font-size: 1.1em;
+color: var(--load-dark-gray);
+}
+/**/
+
+  /************/
+ /** Center **/
+/************/
+
+.active-window {
+  flex-direction: row;
+  max-width: 20vw;
+  overflow: hidden;
+}
+
+.app-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 25vw;
+}
+
+  /***********/
+ /** Right **/
+/***********/
+  
+/* Network */
+.label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.7em;
+  gap: 0.1em;
+}
+
+.net-down {
+  color: var(--load-low);
+}
+
+.net-up {
+  color: var(--load-high);
+}
+/**/
+  
+/* Disks */
+.disk {
+  /*background-color: #1e1e1e;*/
+  padding: 0.33em;
+  margin: 0.5em;
+}
+/**/
