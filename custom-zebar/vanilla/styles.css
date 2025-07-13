@@ -13,7 +13,7 @@
 
 /* Root Variables */
 :root {
-  --fg:                     hsl(240, 10%, 18%);
+  --fg:                     hsla(240, 10%, 18%, 0.75);
   --highlight:              hsl(240, 10%, 25%);
   
   --text:                   hsl(240, 10%, 95%);
@@ -166,7 +166,7 @@ body {
 }
 
 .ovr.fg:hover {
-  margin: 0 0.75em 0 0;
+  margin: 0 1em 0 0;
 }
   
 .lock {

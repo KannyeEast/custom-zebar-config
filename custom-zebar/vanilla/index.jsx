@@ -64,29 +64,19 @@ function LeftPanel({output}) {
 
 // Center Panel
 function CenterPanel ({ output, iconSize }) {
-    const focusedMonitor = output.glazewm?.focusedMonitor;
-    const currMonitor = output.glazewm?.currentMonitor;
+    const isFocused = output.glazewm?.focusedMonitor === output.glazewm?.currentMonitor;
     
     return (
         <div className="center">
-            {(() => {
-                if (focusedMonitor === currMonitor) {
-                    {/* Window Name */}
-                    return ( 
-                        output.glazewm && (
-                            <Window output={output.glazewm} />
-                        )
-                    )
-                }
-                {/* Media Session */}
-                return (
-                    output.media && (
-                        <Media output={output.media} iconSize={iconSize} />
-                    )
-                )
-            })()}
+            {isFocused ? (
+                /* Active Window */
+                output.glazewm && <Window output={output.glazewm} />
+            ) : (
+                /* Media Session */
+                output.media && <Media output={output.media} iconSize={iconSize} />
+            )}
         </div>
-    )
+    );
 }
 
 // Right Panel
@@ -106,8 +96,8 @@ function RightPanel({ output, iconSize }) {
                 <Disk output={output.disk} iconSize={iconSize} />
             )}
             {/* CPU */}
-            {output.cpu && (
-                <CPU output={output.cpu} iconSize={iconSize} />
+            {output && (
+                <CPU output={output} iconSize={iconSize} />
             )}
             {/* RAM */}
             {output.memory && (
@@ -135,41 +125,29 @@ function Workspaces({ output }) {
     const sortedAll = [...allWorkspaces].sort((a, b) => Number(a.name) - Number(b.name));
     
     return (
-        <div className="fg"className="fg">
+        <div className="fg">
             {sortedAll.map((ws) => {
                 const isCurrent = currentSet.has(ws.name);
                 const isActive = ws.displayName === displayedWorkspaceName;
-            
-                {/* Active Screen */}
-                if (isCurrent) {
-                    return (
-                        <span>
-                            <button 
-                                key={ws.id ?? ws.name} 
-                                onClick={() => 
-                                    output.glazewm.runCommand(`focus --workspace ${ws.name}`)
-                            }
-                            >
+                
+                return (
+                    <span key={ws.id ?? ws.name}>
+                        <button 
+                            onClick={() => 
+                                output.runCommand(`focus --workspace ${ws.name}`)
+                        }
+                        >
+                            {isCurrent ? (
+                                /* Active Screen */
                                 <span className={isActive ? "focused" : "unfocused"}>
                                     {ws.name + ": "} {isActive ? '◎' : '●'}
                                 </span>
-                            </button>
-                        </span>
-                    );
-                }
-            
-                {/* Inactive Screen */}
-                return (
-                    <span>
-                        <button 
-                            key={ws.id ?? ws.name} 
-                            onClick={() => 
-                                output.glazewm.runCommand(`focus --workspace ${ws.name}`)
-                        }
-                        >
-                            <span className="unfocused">
-                                ◌
-                            </span>
+                            ) : (
+                                /* Inactive Screen */
+                                <span className="unfocused">
+                                    ◌
+                                </span>
+                            )}
                         </button>
                     </span>
                 );
@@ -345,7 +323,7 @@ function Disk({ output, iconSize }) {
 
 // CPU
 function CPU({ output, iconSize }) {
-    const usage = Math.floor(output.usage);
+    const usage = Math.floor(output.cpu?.usage);
     
     return (
         <div className="fg">
