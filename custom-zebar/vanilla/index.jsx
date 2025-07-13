@@ -1,13 +1,14 @@
 ﻿// Imports
 import React, { useState, useEffect } from "https://esm.sh/react@18?dev";
 import { createRoot } from "https://esm.sh/react-dom@18/client?dev";
-import * as zebar from "https://esm.sh/zebar@2";
+import * as zebar from "https://esm.sh/zebar@3.0";
 
 // Set the needed Providers 
 const providers = zebar.createProviderGroup({
     date:       { type: "date", formatting: "dd.MM — HH:mm" },
     glazewm:    { type: "glazewm" },
     media:      { type: "media" },
+    systray:    { type: "systray" },
     audio:      { type: "audio" },
     network:    { type: "network", refreshInterval: "2000" },
     disk:       { type: "disk" },
@@ -27,7 +28,7 @@ function App() {
 
     return (
         <div className="app">
-            <LeftPanel output={output} />
+            <LeftPanel output={output} iconSize={iconSize}/>
             <CenterPanel output={output} iconSize={iconSize} />
             <RightPanel output={output} iconSize={iconSize} />
         </div>
@@ -39,12 +40,13 @@ function App() {
 //********************//
 
 // Left Panel
-function LeftPanel({output}) {
+function LeftPanel({output, iconSize}) {
     return (
         <div className="left">
             {/* Lock */}
             <div className="ovr fg">
                 <button
+                    title={output.glazewm?.isPaused ? "Unlock" : "Lock"}
                     className={`lock ${output.glazewm?.isPaused ? 'paused' : 'active'}`}
                     onClick={() => output.glazewm.runCommand("wm-toggle-pause")}
                 ></button>
@@ -55,9 +57,23 @@ function LeftPanel({output}) {
             </div>
             {/* Workspaces */}
             {output.glazewm && (
-                <Workspaces output={output.glazewm} />
+                <Workspaces output={output.glazewm} iconSize={iconSize} />
             )}
-
+            {/* Current Tiling Direction */} 
+            <div className="ovr til fg">
+                <button
+                    title={String(output.glazewm?.tilingDirection).charAt(0).toUpperCase() + output.glazewm?.tilingDirection.slice(1)}
+                    className={output.glazewm?.tilingDirection === "horizontal" ? "" : "rot"}
+                    onClick={() => output.glazewm.runCommand("toggle-tiling-direction")}
+                >
+                    <img
+                        src="./icons/tiling-00.png"
+                        className={`ovr i`}
+                        width={iconSize * 0.75}
+                        height={iconSize * 0.75}
+                    />
+                </button>
+            </div>
         </div>
     )
 }
@@ -83,6 +99,10 @@ function CenterPanel ({ output, iconSize }) {
 function RightPanel({ output, iconSize }) {
     return (
         <div className="right">
+            {/* System Tray */}
+            {output.systray && (
+                <Systray output={output.systray} iconSize={iconSize} />
+            )}
             {/* Audio */}
             {output.audio && (
                 <Audio output={output.audio} iconSize={iconSize} />
@@ -93,7 +113,7 @@ function RightPanel({ output, iconSize }) {
             )}
             {/* Disks */}
             {output.disk && (
-                <Disk output={output.disk} iconSize={iconSize} />
+                <Disk output={output.disk} iconSize={iconSize} glaze={output.glazewm} />
             )}
             {/* CPU */}
             {output && (
@@ -111,9 +131,12 @@ function RightPanel({ output, iconSize }) {
  //** Render Functions **//
 //**********************//
 
-//--- Left ---//
+      //------------//
+     //--- Left ---//
+    //------------//
+
 // Workspaces
-function Workspaces({ output }) {
+function Workspaces({ output, iconSize }) {
     const allWorkspaces = output.allWorkspaces ?? [];
     const currentWorkspaces = output.currentWorkspaces ?? [];
     const displayedWorkspaceName = output.displayedWorkspace?.displayName ?? "Unknown";
@@ -133,6 +156,7 @@ function Workspaces({ output }) {
                 return (
                     <span key={ws.id ?? ws.name}>
                         <button 
+                            title={"Focus " + ws.name + ": " +  ws.displayName}
                             onClick={() => 
                                 output.runCommand(`focus --workspace ${ws.name}`)
                         }
@@ -154,13 +178,16 @@ function Workspaces({ output }) {
             })}
             {/* Active Workspace Title per Screen */}
             <span className="overflow">
-                {"| " + displayedWorkspaceName}
+                {"ㅤ|ㅤ" + displayedWorkspaceName}
             </span>
         </div>
     );
 }
 
-//--- Center ---//
+      //--------------//
+     //--- Center ---//
+    //--------------//
+
 // Window Title
 function Window({ output }) {
     const procName = output.focusedContainer.processName ?? "Unknown";
@@ -168,7 +195,7 @@ function Window({ output }) {
     
     return (
         <div className="fg">
-            <span className="overflow">
+            <span title={output.focusedContainer.title} className="overflow">
                 {cleaned}
             </span>
         </div>
@@ -180,37 +207,151 @@ function Media({ output, iconSize }) {
     const session = output.currentSession;
     const { title = 'Unknown Track', artist = 'Unknown Artist', isPlaying } = session || {};
     
+    const adjIconSize = iconSize * 0.85;
+    
     return (
         <div className="fg">
-            <span className="overflow">
-                {`${title} — ${artist}`}
-            </span>
-            <button
-                key={isPlaying}
-                onClick={() => output.togglePlayPause()}
-            >
-                <img
-                    src={`./icons/play-${isPlaying ? "00" : "01"}.png`}
-                    className="media i"
-                    width={iconSize}
-                    height={iconSize}
-                />
-            </button>
+            {session ? (
+                <>
+                    <button
+                        key="prev"
+                        title="Previous"
+                        onClick={() => output.previous()}
+                    >
+                        <img
+                            src={"./icons/skip-00.png"}
+                            className="media i rot"
+                            width={adjIconSize}
+                            height={adjIconSize}
+                        />
+                    </button>
+                    <button
+                        key={isPlaying}
+                        title={isPlaying ? 'Pause' : 'Play'}
+                        onClick={() => output.togglePlayPause()}
+                    >
+                        <img
+                            src={`./icons/play-${isPlaying ? "01" : "00"}.png`}
+                            className="media i"
+                            width={adjIconSize}
+                            height={adjIconSize}
+                        />
+                    </button>
+                    <button
+                        key="next"
+                        title="Next"
+                        onClick={() => output.next()}
+                    >
+                        <img
+                            src={"./icons/skip-00.png"}
+                            className="media i"
+                            width={adjIconSize}
+                            height={adjIconSize}
+                        />
+                    </button>
+                    <span title={title + " — " + artist}>
+                        <span className="media overflow">
+                            {"ㅤ" + title} 
+                        </span>
+                        <span className="media overflow">
+                             {"ㅤ—ㅤ" + artist}
+                        </span>
+                    </span>
+                </>
+                ) : (
+                    <span>
+                        No Media playing
+                    </span>
+                )}
         </div>
     )
 }
 
-//--- Right ---//
+      //-------------//
+     //--- Right ---//
+    //-------------//
+
+// System Tray
+function Systray({ output, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const adjIconSize = iconSize * 0.85;
+    
+    // Click Event
+    const handleClick = (e, icon) => {
+        e.preventDefault();
+        if (e.shiftKey) return;
+        
+        switch (e.button) {
+            case 0:
+                output.onLeftClick(icon.id)
+                break;
+            case 1:
+                output.onMiddleClick(icon.id)
+                break;
+            case 2:
+                output.onRightClick(icon.id)
+                break;
+        }
+    }
+    
+    return (
+        <div className="til fg">
+            <button
+                title={isOpen ? "Close" : "Open"}
+                key={isOpen}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <img
+                    key={isOpen}
+                    src={"./icons/open-00.png"}
+                    className={`${isOpen ? "open" : ""} ovr i `}
+                    width={iconSize}
+                    height={iconSize}
+                    alt="status"
+                />
+            </button>
+            
+            <span className={`${isOpen ? "open" : ""} sys overflow`}>
+                {output.icons
+                    .filter(icon => icon.iconHash !== "54b3f1b8992816cb") /* Ignore Audio Tray */
+                    .sort((a, b) => a.tooltip.localeCompare(b.tooltip))
+                    .map((icon) => (
+                    <button 
+                        title={icon.tooltip}
+                        onMouseDown={(e) => handleClick(e, icon)}
+                        onContextMenu={(e) => e.preventDefault()}
+                    >
+                        <img
+                            key={icon.id}
+                            src={icon.iconUrl}
+                            className="i-sys"
+                            width={adjIconSize}
+                            height={adjIconSize}
+                            alt={icon.tooltip}
+                        />
+                    </button>
+                ))}
+            </span>
+        </div>
+    )
+}
+
 // Audio
 function Audio({ output, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
     const volume = output?.defaultPlaybackDevice?.volume;
     
     return (
         <div className="fg">
             {/* get Audio Icon */}
-            <span>
+            <button
+                title="Audio"
+                key={isOpen} 
+                onClick={() => setIsOpen(!isOpen)}
+            >
                 {GetIcon("audio", "png", volume, [5, 33, 66], iconSize)}
-            </span>
+            </button>
             {/* Display Audio Volume */}
             <span className={`gray ${GetUsage(volume, true)}`}>
                 [{String(volume).padStart(2, '0')}%]
@@ -221,6 +362,8 @@ function Audio({ output, iconSize }) {
 
 // Network
 function Network({ output, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
     const netType = output?.defaultInterface?.type?.toLowerCase() ?? "";
     const strength = output?.defaultGateway?.signalStrength;
     
@@ -231,6 +374,11 @@ function Network({ output, iconSize }) {
     return (
         <div className="fg">
             {/* get Network Icon */}
+            <button
+                title="Network"
+                key={isOpen}
+                onClick={() => setIsOpen(!isOpen)}
+            >
             {(() => {
                 switch (netType) {
                     case "ethernet":
@@ -263,11 +411,12 @@ function Network({ output, iconSize }) {
                         );
                 }
             })()}
+            </button>
 
             {/* Received & Transmitted Data */}
-            <span className="label hover-details">
+            <span className={`${isOpen ? "open" : ""} hover-details label`} >
                 <span className="net-down">
-                    ↓ {down ? `${down.iecValue.toFixed(1)} ${down.iecUnit}/s` : "--"}
+                    ↓ {down ? `${down.iecValue.toFixed(1)} ${down.iecUnit}/s` : "--"} 
                 </span>
                 <span className="net-up">
                     ↑ {up ? `${up.iecValue.toFixed(1)} ${up.iecUnit}/s` : "--"}
@@ -278,20 +427,26 @@ function Network({ output, iconSize }) {
 }
 
 // Disks
-function Disk({ output, iconSize }) {
+function Disk({ output, iconSize, glaze }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
     const disks = output.disks ?? [];
 
     return (
         <div className="fg">
             {/* get Disk Icon */}
-            <span>
+            <button
+                title="Drives"
+                key={isOpen}
+                onClick={() => setIsOpen(!isOpen)}
+            >
                 <img
                     src="./icons/disk-00.png"
                     className="i"
                     width={iconSize}
                     height={iconSize}
                 />
-            </span>
+            </button>
             {/* Display all Disk Drives on System */}
             <span>
                 {disks.map((disk) => {
@@ -305,12 +460,14 @@ function Disk({ output, iconSize }) {
                     const label = disk.mountPoint.replace(/\\$/, '');
 
                     return (
-                        <span className="disk">
-                            <span>{label}</span>
-                            <span className="hover-details">
+                        <span>
+                            <span>
+                                {label}
+                            </span>
+                            <span className={`${isOpen ? "open" : ""} hover-details`}>
                                 [{usedGB.toFixed(1)}G/{totalGB.toFixed(1)}G]
                             </span>
-                            <span className={GetUsage(percent)}>
+                            <span className={`disk ${GetUsage(percent)}`}>
                                 [{String(percent).padStart(2, '0')}%]
                             </span>
                         </span>
@@ -323,17 +480,31 @@ function Disk({ output, iconSize }) {
 
 // CPU
 function CPU({ output, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
     const usage = Math.floor(output.cpu?.usage);
     
     return (
         <div className="fg">
-            <span>
+            <button
+                title="CPU"
+                key={isOpen}
+                onClick={() => setIsOpen(!isOpen)}
+            >
                 <img 
                     src="./icons/cpu-00.png" 
                     className="i" 
                     width={iconSize} 
                     height={iconSize}
                 />
+            </button>
+            <span className={`${isOpen ? "open" : ""} hover-details label`} >
+                <span> 
+                    {output.cpu?.physicalCoreCount} Cores
+                </span>
+                <span>
+                    {output.cpu?.logicalCoreCount} Threads
+                </span>
             </span>
             <span className={GetUsage(usage)}>
                 [{String(usage).padStart(2, '0')}%]
@@ -344,21 +515,27 @@ function CPU({ output, iconSize }) {
 
 // RAM
 function RAM({ output, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+    
     const usage = Math.floor(output.usage);
     const usedMemory  = (output.usedMemory ?? 0) / (1024 ** 3);
     const totalMemory = (output.totalMemory ?? 0) / (1024 ** 3);
     
     return (
         <div className="fg">
-            <span>
+            <button
+                title="RAM"
+                key={isOpen}
+                onClick={() => setIsOpen(!isOpen)}
+            >
                 <img
                     src="./icons/ram-00.png"
                     className="i"
                     width={iconSize}
                     height={iconSize}
                 />
-            </span>
-            <span className="hover-details">
+            </button>
+            <span className={`${isOpen ? "open" : ""} hover-details`}>
                 [{usedMemory.toFixed(1)}G/{totalMemory.toFixed(1)}G]
             </span>
             <span className={GetUsage(usage)}>
@@ -381,10 +558,10 @@ function GetUsage(percent, invert = false) {
         load = 100 - percent;
     }
     
-    if (load < 30) return "load-low";
-    else if (load < 65) return "load-medium";
-    else if (load < 90) return "load-high";
-    return "load-extreme";
+    if (load < 30) return "load low";
+    else if (load < 65) return "load medium";
+    else if (load < 90) return "load high";
+    return "load extreme";
 }
 
 

@@ -13,8 +13,8 @@
 
 /* Root Variables */
 :root {
-  --fg:                     hsla(240, 10%, 18%, 0.75);
-  --highlight:              hsl(240, 10%, 25%);
+  --fg:                     hsla(240, 10%, 18%, 0.66);
+  --highlight:              hsl(240, 10%, 18%);
   
   --text:                   hsl(240, 10%, 95%);
 
@@ -31,31 +31,22 @@
 /**/
 
 /* Load Levels */
-.load-low, .load-medium, .load-high, .load-extreme {
-  flex-shrink: 0;
-  margin-left: 0.33em;
-}
+.load.low                   { color: var(--load-low); }
+.load.medium                { color: var(--load-medium); }
+.load.high                  { color: var(--load-high); }
+.load.extreme               { color: var(--load-extreme); }
 
-.load-low                   { color: var(--load-low); }
-.load-medium                { color: var(--load-medium); }
-.load-high                  { color: var(--load-high); }
-.load-extreme               { color: var(--load-extreme); }
-
-.gray.load-low              { color: var(--load-light-gray); }
-.gray.load-medium           { color: var(--load-gray); }
-.gray.load-high             { color: var(--load-dark-gray); }
-.gray.load-extreme          { color: var(--load-very-dark-gray); }
+.gray.load.low              { color: var(--load-light-gray); }
+.gray.load.medium           { color: var(--load-gray); }
+.gray.load.high             { color: var(--load-dark-gray); }
+.gray.load.extreme          { color: var(--load-very-dark-gray); }
 /**/
 
 /* Icons - https://icons8.com/icons */
 .i {
   /* Hex to Filter - https://codepen.io/sosuke/pen/Pjoqqp */
   filter: invert(98%) sepia(97%) saturate(2878%) hue-rotate(177deg) brightness(107%) contrast(104%);
-  margin: 0.1em;
-}
-
-.media.i {
-  margin: 0.25em 0.1em 0.1em 1em;
+  transform: translateY(0.1em);
 }
 
 img {
@@ -72,29 +63,30 @@ button{
 /**/
 
 /* Hover Details - Hidden Details */
+.open.hover-details {
+  color : var(--load-gray);
+  visibility: visible;
+  opacity: 1;
+  margin-left: 0.25em;
+  max-width: 25em;
+  gap: 0.5em;
+}
+  
 .hover-details {
-  display: inline-block;
-  color: var(--load-gray);
+  display: inline-flex;
+  visibility: hidden;
   opacity: 0;
   max-width: 0;
-}
-
-.fg:hover .hover-details {
-  opacity: 1;
-  max-width: 20em;
-}
-
-.fg:hover .label.hover-details {
-  margin-left: 1em;
 }
 /**/
 
 /* Wrap Text */
 .overflow {
+  display: inline-block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 15vw;
+  max-width: 20em;
 }
 /**/
 
@@ -127,18 +119,17 @@ body {
 .fg {
   display: inline-flex;
   align-items: center;
-  margin: 0.25em;
-  padding: 1em;
-  gap: 0.25em;
   background: var(--fg);
-  transform: translateY(0.05em);
+  margin: 0.25em;
+  padding: 0.5em 1em 0.5em 1em;
+  border-radius: 0.5em;
+  gap: 0.25em;
 }
 
 .fg:hover {
   background: var(--highlight);
-  margin: 1em;
+  margin: 0.5em;
   border-radius: 1em;
-  transform: scale(1.05) translateY(0.1em);
 }
 
 /* Structure */
@@ -157,16 +148,17 @@ body {
   /**********/
  /** Left **/
 /**********/
-
+  
 /* Lock */
 .ovr.fg {
-  padding: 0.25em;
+  padding: 0.15em;
   margin-right: 0.75em;
   border-radius: 1em;
 }
 
 .ovr.fg:hover {
-  margin: 0 1em 0 0;
+  margin: 0 1em 0 0.25em;
+  transform: scale(1.1);
 }
   
 .lock {
@@ -184,28 +176,96 @@ body {
 }
 /**/
 
+/* Tiling Direction */
+.til.fg {
+  padding: 0.15em;
+}
+  
+.ovr.i{
+  transform: translateY(0.15em);
+}
+
+.rot{
+  transform: rotate(-90deg);
+}
+/**/
+  
 /* Workspace Symbols */
 .focused {
   font-size: 1.2em;
   color: var(--text);
+  transform: translateY(0.025em);
 }  
 
 .unfocused {
   font-size: 1.1em;
   color: var(--load-dark-gray);
+  transform: translateY(0.05em);
 }
 /**/
+
+  /************/
+ /** Center **/ 
+/************/
+  
+/* Media Session */
+.media.overflow{
+  transform: translateY(0.1em);
+}
+
+.rot.i {
+  transform: rotate(180deg) translateY(-0.1em);
+}
+
+.media.i {
+  margin: 0.25em -0.25em 0.1em -0.25em;
+}
 
   /***********/
  /** Right **/
 /***********/
   
+/* System Tray */
+.open.sys {
+  opacity: 1;
+  visibility: visible;
+  max-width: 25em;
+  margin-right: 0.5em;
+}
+  
+.sys {
+  display: inline-flex;
+  opacity: 0;
+  visibility: hidden;
+  max-width: 0;
+  gap: 0.5em;
+}
+
+.sys button {
+  padding: 0;
+  margin: 0;
+}
+
+.open.i{
+  transform: rotate(-180deg) translateY(-0.15em);
+}
+
+.i-sys {
+  margin: 0.25em;
+  transform: translateY(0.1em);
+}
+/**/
+
 /* Network */
 .label {
   display: flex;
   flex-direction: column;
   font-size: 0.7em;
-  gap: 0.1em;
+}
+
+.open.label.hover-details {
+  margin-right: 0.5em;
+  gap: 0.5em;
 }
 
 .net-down {
@@ -217,10 +277,8 @@ body {
 }
 /**/
   
-/* Disks */
-.disk {
-  /*background-color: #1e1e1e;*/
-  padding: 0.33em;
-  margin: 0.5em;
+/* Disk */
+.disk.load{
+  margin: 0 0.5em 0 0.33em;
 }
 /**/
