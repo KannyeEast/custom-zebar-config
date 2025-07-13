@@ -19,6 +19,7 @@ createRoot(document.getElementById("root")).render(<App />);
 
 function App() {
     const [output, setOutput] = useState(providers.outputMap);
+    const iconSize = 16;
 
     useEffect(() => {
         providers.onOutput(() => setOutput(providers.outputMap));
@@ -27,8 +28,8 @@ function App() {
     return (
         <div className="app">
             <LeftPanel output={output} />
-            <CenterPanel output={output} />
-            <RightPanel output={output} />
+            <CenterPanel output={output} iconSize={iconSize} />
+            <RightPanel output={output} iconSize={iconSize} />
         </div>
     );
 }
@@ -53,25 +54,43 @@ function LeftPanel({output}) {
                 {output.date?.formatted}
             </div>
             {/* Workspaces */}
-            <Workspaces output={output} />
+            {output.glazewm && (
+                <Workspaces output={output.glazewm} />
+            )}
+
         </div>
     )
 }
 
 // Center Panel
-function CenterPanel(output) {
+function CenterPanel ({ output, iconSize }) {
+    const focusedMonitor = output.glazewm?.focusedMonitor;
+    const currMonitor = output.glazewm?.currentMonitor;
+    
     return (
         <div className="center">
-            {/* Window Name */}
-            <Workspaces output={output} />
+            {(() => {
+                if (focusedMonitor === currMonitor) {
+                    {/* Window Name */}
+                    return ( 
+                        output.glazewm && (
+                            <Window output={output.glazewm} />
+                        )
+                    )
+                }
+                {/* Media Session */}
+                return (
+                    output.media && (
+                        <Media output={output.media} iconSize={iconSize} />
+                    )
+                )
+            })()}
         </div>
     )
 }
 
 // Right Panel
-function RightPanel({ output }) {
-    const iconSize = 16;
-    
+function RightPanel({ output, iconSize }) {
     return (
         <div className="right">
             {/* Audio */}
@@ -102,11 +121,12 @@ function RightPanel({ output }) {
  //** Render Functions **//
 //**********************//
 
+//--- Left ---//
 // Workspaces
 function Workspaces({ output }) {
-    const allWorkspaces = output.glazewm?.allWorkspaces ?? [];
-    const currentWorkspaces = output.glazewm?.currentWorkspaces ?? [];
-    const displayedWorkspaceName = output.glazewm?.displayedWorkspace?.displayName ?? "Unknown";
+    const allWorkspaces = output.allWorkspaces ?? [];
+    const currentWorkspaces = output.currentWorkspaces ?? [];
+    const displayedWorkspaceName = output.displayedWorkspace?.displayName ?? "Unknown";
 
     // Create a set of active Workspace names for lookup
     const currentSet = new Set(currentWorkspaces.map(ws => ws.name));
@@ -155,13 +175,54 @@ function Workspaces({ output }) {
                 );
             })}
             {/* Active Workspace Title per Screen */}
-            <span>
+            <span className="overflow">
                 {"| " + displayedWorkspaceName}
             </span>
         </div>
     );
 }
 
+//--- Center ---//
+// Window Title
+function Window({ output }) {
+    const procName = output.focusedContainer.processName ?? "Unknown";
+    const cleaned = String(procName.replace(/\.exe$/i, '').trim()).charAt(0).toUpperCase() + procName.slice(1);
+    
+    return (
+        <div className="fg">
+            <span className="overflow">
+                {cleaned}
+            </span>
+        </div>
+    )
+}
+
+// Media Session
+function Media({ output, iconSize }) {
+    const session = output.currentSession;
+    const { title = 'Unknown Track', artist = 'Unknown Artist', isPlaying } = session || {};
+    
+    return (
+        <div className="fg">
+            <span className="overflow">
+                {`${title} — ${artist}`}
+            </span>
+            <button
+                key={isPlaying}
+                onClick={() => output.togglePlayPause()}
+            >
+                <img
+                    src={`./icons/play-${isPlaying ? "00" : "01"}.png`}
+                    className="media i"
+                    width={iconSize}
+                    height={iconSize}
+                />
+            </button>
+        </div>
+    )
+}
+
+//--- Right ---//
 // Audio
 function Audio({ output, iconSize }) {
     const volume = output?.defaultPlaybackDevice?.volume;
