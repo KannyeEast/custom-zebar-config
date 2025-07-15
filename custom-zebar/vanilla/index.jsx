@@ -44,33 +44,36 @@ function LeftPanel({output, iconSize}) {
     return (
         <div className="left">
             {/* Lock */}
-            <div className="ovr fg">
+            <div className="ovr">
                 <button
                     title={output.glazewm?.isPaused ? "Unlock" : "Lock"}
-                    className={`lock ${output.glazewm?.isPaused ? 'paused' : 'active'}`}
+                    className={`lock ${output.glazewm?.isPaused ? 'locked' : 'unlocked'}`}
                     onClick={() => output.glazewm.runCommand("wm-toggle-pause")}
                 ></button>
             </div>
             {/* Date */}
-            <div className="fg">
-                {output.date?.formatted}
+            <div className="bg">
+                <span className="media">
+                    {output.date?.formatted}
+                </span>
             </div>
             {/* Workspaces */}
             {output.glazewm && (
                 <Workspaces output={output.glazewm} iconSize={iconSize} />
             )}
             {/* Current Tiling Direction */} 
-            <div className="ovr til fg">
+            <div className="bg">
                 <button
                     title={String(output.glazewm?.tilingDirection).charAt(0).toUpperCase() + output.glazewm?.tilingDirection.slice(1)}
-                    className={output.glazewm?.tilingDirection === "horizontal" ? "" : "rot"}
+                    className={`${output.glazewm?.tilingDirection === "horizontal" ? "" : "rot"}`}
                     onClick={() => output.glazewm.runCommand("toggle-tiling-direction")}
                 >
                     <img
                         src="./icons/tiling-00.png"
-                        className={`ovr i`}
+                        className={`i`}
                         width={iconSize * 0.75}
                         height={iconSize * 0.75}
+                        alt={output.glazewm?.tilingDirection}
                     />
                 </button>
             </div>
@@ -103,6 +106,10 @@ function RightPanel({ output, iconSize }) {
             {output.systray && (
                 <Systray output={output.systray} iconSize={iconSize} />
             )}
+            {/* Custom Shortcuts */}
+            {output.glazewm && (
+                <ShortcutTray glaze={output.glazewm} iconSize={iconSize} />
+            )}
             {/* Audio */}
             {output.audio && (
                 <Audio output={output.audio} iconSize={iconSize} />
@@ -113,7 +120,7 @@ function RightPanel({ output, iconSize }) {
             )}
             {/* Disks */}
             {output.disk && (
-                <Disk output={output.disk} iconSize={iconSize} glaze={output.glazewm} />
+                <Disk output={output.disk} iconSize={iconSize} />
             )}
             {/* CPU */}
             {output && (
@@ -127,13 +134,13 @@ function RightPanel({ output, iconSize }) {
     );
 }
 
-  //**********************//
- //** Render Functions **//
-//**********************//
+  //*****************************//
+ //** Simple Render Functions **//
+//*****************************//
 
+        //------------//
+       //--- Left ---//
       //------------//
-     //--- Left ---//
-    //------------//
 
 // Workspaces
 function Workspaces({ output, iconSize }) {
@@ -148,7 +155,7 @@ function Workspaces({ output, iconSize }) {
     const sortedAll = [...allWorkspaces].sort((a, b) => Number(a.name) - Number(b.name));
     
     return (
-        <div className="fg">
+        <div className="bg">
             {sortedAll.map((ws) => {
                 const isCurrent = currentSet.has(ws.name);
                 const isActive = ws.displayName === displayedWorkspaceName;
@@ -156,15 +163,23 @@ function Workspaces({ output, iconSize }) {
                 return (
                     <span key={ws.id ?? ws.name}>
                         <button 
-                            title={"Focus " + ws.name + ": " +  ws.displayName}
-                            onClick={() => 
-                                output.runCommand(`focus --workspace ${ws.name}`)
+                            title={isActive ? (ws.name + ": " +  ws.displayName) : ("Focus " + ws.name + ": " +  ws.displayName)}
+                            onClick={() => isActive ? "" : output.runCommand(`focus --workspace ${ws.name}`)
                         }
                         >
                             {isCurrent ? (
                                 /* Active Screen */
                                 <span className={isActive ? "focused" : "unfocused"}>
-                                    {ws.name + ": "} {isActive ? '◎' : '●'}
+                                    {ws.name + ": "}
+                                    {isActive ?
+                                        (
+                                            <>
+                                                ◎
+                                                <Taskbar ws={ws} />
+                                            </>
+                                        ) : (
+                                            "●"
+                                        )}
                                 </span>
                             ) : (
                                 /* Inactive Screen */
@@ -177,11 +192,35 @@ function Workspaces({ output, iconSize }) {
                 );
             })}
             {/* Active Workspace Title per Screen */}
-            <span className="overflow">
+            <span className="media">
                 {"ㅤ|ㅤ" + displayedWorkspaceName}
             </span>
         </div>
     );
+}
+
+// Get Active Workspace Programs
+function Taskbar({ ws }) {
+    if (!ws.isDisplayed) return null;
+
+    return (
+        <span>
+            {ws.children.map((child) => {
+                if (child.type === "window") {
+                    return (
+                        <span title={child.processName} className="taskbar">
+                            ☐
+                        </span>
+                    )
+                } else if (child.type === "split") {
+                    child.children.map((subChild) => {
+                        <Taskbar ws={subChild} />;
+                    })
+                }
+                return null
+            })}
+        </span>
+    )
 }
 
       //--------------//
@@ -194,8 +233,8 @@ function Window({ output }) {
     const cleaned = String(procName.replace(/\.exe$/i, '').trim()).charAt(0).toUpperCase() + procName.slice(1);
     
     return (
-        <div className="fg">
-            <span title={output.focusedContainer.title} className="overflow">
+        <div className="bg">
+            <span title={output.focusedContainer.title}>
                 {cleaned}
             </span>
         </div>
@@ -210,7 +249,7 @@ function Media({ output, iconSize }) {
     const adjIconSize = iconSize * 0.85;
     
     return (
-        <div className="fg">
+        <div className="bg">
             {session ? (
                 <>
                     <button
@@ -223,6 +262,7 @@ function Media({ output, iconSize }) {
                             className="media i rot"
                             width={adjIconSize}
                             height={adjIconSize}
+                            alt="Previous"
                         />
                     </button>
                     <button
@@ -235,6 +275,7 @@ function Media({ output, iconSize }) {
                             className="media i"
                             width={adjIconSize}
                             height={adjIconSize}
+                            alt={isPlaying ? "Pause" : "Play"}
                         />
                     </button>
                     <button
@@ -247,15 +288,12 @@ function Media({ output, iconSize }) {
                             className="media i"
                             width={adjIconSize}
                             height={adjIconSize}
+                            alt="Skip"
                         />
                     </button>
-                    <span title={title + " — " + artist}>
-                        <span className="media overflow">
-                            {"ㅤ" + title} 
-                        </span>
-                        <span className="media overflow">
-                             {"ㅤ—ㅤ" + artist}
-                        </span>
+                    <span title={title + " — " + artist} className="media ">
+                        {"ㅤ" + title}
+                        {"ㅤ—ㅤ" + (artist != null ? artist : "Unknown Artist")}
                     </span>
                 </>
                 ) : (
@@ -274,13 +312,13 @@ function Media({ output, iconSize }) {
 // System Tray
 function Systray({ output, iconSize }) {
     const [isOpen, setIsOpen] = useState(false);
-    const adjIconSize = iconSize * 0.85;
-    
+    const adjIconSize = iconSize * 0.9;
+
     // Click Event
     const handleClick = (e, icon) => {
         e.preventDefault();
         if (e.shiftKey) return;
-        
+
         switch (e.button) {
             case 0:
                 output.onLeftClick(icon.id)
@@ -293,48 +331,103 @@ function Systray({ output, iconSize }) {
                 break;
         }
     }
-    
+
     return (
-        <div className="til fg">
+        <div className="bg">
             <button
-                title={isOpen ? "Close" : "Open"}
                 key={isOpen}
+                title={isOpen ? "Close" : "Open"}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <img
-                    key={isOpen}
                     src={"./icons/open-00.png"}
-                    className={`${isOpen ? "open" : ""} ovr i `}
+                    className={`${isOpen ? "open" : ""} i`}
                     width={iconSize}
                     height={iconSize}
-                    alt="status"
+                    alt="Systray"
                 />
             </button>
-            
-            <span className={`${isOpen ? "open" : ""} sys overflow`}>
+
+            <span className={`${isOpen ? "open" : ""} hover-details`}>
                 {output.icons
                     .filter(icon => icon.iconHash !== "54b3f1b8992816cb") /* Ignore Audio Tray */
-                    .sort((a, b) => a.tooltip.localeCompare(b.tooltip))
+                    .sort((a, b) => a.iconHash.localeCompare(b.iconHash))
                     .map((icon) => (
-                    <button 
-                        title={icon.tooltip}
-                        onMouseDown={(e) => handleClick(e, icon)}
-                        onContextMenu={(e) => e.preventDefault()}
+                        <button
+                            key={icon.id}
+                            title={icon.tooltip}
+                            onMouseDown={(e) => handleClick(e, icon)}
+                            onContextMenu={(e) => e.preventDefault()}
+                        >
+                            <img
+                                src={icon.iconUrl}
+                                className="i-sys"
+                                width={adjIconSize}
+                                height={adjIconSize}
+                                alt={icon.tooltip}
+                            />
+                        </button>
+                    ))}
+            </span>
+        </div>
+    )
+}
+
+// Custom Shortcuts
+function ShortcutTray({ glaze, iconSize }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const shortcuts = [
+        {
+            id: "taskmgr",
+            title: "Task Manager",
+            icon: "./icons/taskmgr-00.png",
+            command: "shell-exec taskmgr"
+        },
+        {
+            id: "project",
+            title: "New Project",
+            icon: "./icons/proj-00.png",
+            command: "shell-exec D:\\00_projects\\_create_project\\main.exe"
+        },
+    ];
+
+    return (
+        <div className="bg">
+            <button
+                title="Shortcuts"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <img
+                    src={`./icons/folder-${isOpen ? "01" : "00"}.png`}
+                    className="i"
+                    width={iconSize}
+                    height={iconSize}
+                    alt="Shortcuts"
+                />
+            </button>
+
+            <span className={`${isOpen ? "open" : ""} hover-details`}>
+                {shortcuts.map((item) => (
+                    <button
+                        key={item.id}
+                        title={item.title}
+                        onClick={() => glaze.runCommand(item.command)}
                     >
                         <img
-                            key={icon.id}
-                            src={icon.iconUrl}
-                            className="i-sys"
-                            width={adjIconSize}
-                            height={adjIconSize}
-                            alt={icon.tooltip}
+                            src={item.icon}
+                            className="i"
+                            width={iconSize}
+                            height={iconSize}
+                            alt={item.title}
                         />
                     </button>
                 ))}
             </span>
         </div>
-    )
+    );
 }
+
 
 // Audio
 function Audio({ output, iconSize }) {
@@ -343,7 +436,7 @@ function Audio({ output, iconSize }) {
     const volume = output?.defaultPlaybackDevice?.volume;
     
     return (
-        <div className="fg">
+        <div className="bg">
             {/* get Audio Icon */}
             <button
                 title="Audio"
@@ -353,7 +446,7 @@ function Audio({ output, iconSize }) {
                 {GetIcon("audio", "png", volume, [5, 33, 66], iconSize)}
             </button>
             {/* Display Audio Volume */}
-            <span className={`gray ${GetUsage(volume, true)}`}>
+            <span className={`gray ${GetUsage(volume, true)} media`}>
                 [{String(volume).padStart(2, '0')}%]
             </span>
         </div>
@@ -372,7 +465,7 @@ function Network({ output, iconSize }) {
     const up = traffic?.transmitted;
 
     return (
-        <div className="fg">
+        <div className="bg">
             {/* get Network Icon */}
             <button
                 title="Network"
@@ -389,6 +482,7 @@ function Network({ output, iconSize }) {
                                     className="i" 
                                     width={iconSize} 
                                     height={iconSize}
+                                    alt="Ethernet"
                                 />
                             </span>
                         );
@@ -406,6 +500,7 @@ function Network({ output, iconSize }) {
                                     className="i"
                                     width={iconSize}
                                     height={iconSize}
+                                    alt={`Wifi ${strength}`}
                                 />
                             </span>
                         );
@@ -427,13 +522,13 @@ function Network({ output, iconSize }) {
 }
 
 // Disks
-function Disk({ output, iconSize, glaze }) {
+function Disk({ output, iconSize }) {
     const [isOpen, setIsOpen] = useState(false);
     
     const disks = output.disks ?? [];
 
     return (
-        <div className="fg">
+        <div className="bg">
             {/* get Disk Icon */}
             <button
                 title="Drives"
@@ -445,10 +540,11 @@ function Disk({ output, iconSize, glaze }) {
                     className="i"
                     width={iconSize}
                     height={iconSize}
+                    alt="Disk"
                 />
             </button>
             {/* Display all Disk Drives on System */}
-            <span>
+            <span className="media">
                 {disks.map((disk) => {
                     const total = disk.totalSpace.bytes;
                     const available = disk.availableSpace.bytes;
@@ -485,7 +581,7 @@ function CPU({ output, iconSize }) {
     const usage = Math.floor(output.cpu?.usage);
     
     return (
-        <div className="fg">
+        <div className="bg">
             <button
                 title="CPU"
                 key={isOpen}
@@ -496,6 +592,7 @@ function CPU({ output, iconSize }) {
                     className="i" 
                     width={iconSize} 
                     height={iconSize}
+                    alt="CPU"
                 />
             </button>
             <span className={`${isOpen ? "open" : ""} hover-details label`} >
@@ -506,7 +603,7 @@ function CPU({ output, iconSize }) {
                     {output.cpu?.logicalCoreCount} Threads
                 </span>
             </span>
-            <span className={GetUsage(usage)}>
+            <span className={`${GetUsage(usage)} media`}>
                 [{String(usage).padStart(2, '0')}%]
             </span>
         </div>
@@ -522,7 +619,7 @@ function RAM({ output, iconSize }) {
     const totalMemory = (output.totalMemory ?? 0) / (1024 ** 3);
     
     return (
-        <div className="fg">
+        <div className="bg">
             <button
                 title="RAM"
                 key={isOpen}
@@ -533,12 +630,13 @@ function RAM({ output, iconSize }) {
                     className="i"
                     width={iconSize}
                     height={iconSize}
+                    alt="RAM"
                 />
             </button>
             <span className={`${isOpen ? "open" : ""} hover-details`}>
                 [{usedMemory.toFixed(1)}G/{totalMemory.toFixed(1)}G]
             </span>
-            <span className={GetUsage(usage)}>
+            <span className={`${GetUsage(usage)} media`}>
                 [{String(usage).padStart(2, '0')}%]
             </span>
         </div>
@@ -581,6 +679,7 @@ function GetIcon(name, fileType = "png", percent, threshold = [5, 45, 75], iconS
             className="i"
             width={iconSize}
             height={iconSize}
+            alt={name}
         ></img>
     )
 }
