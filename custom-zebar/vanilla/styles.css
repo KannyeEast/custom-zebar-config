@@ -13,21 +13,22 @@
 :root {
   font-size: 16px;
   
-  --bg:                     hsla(240, 10%, 18%, 0.65);
-  --fg:                     hsla(240, 10%, 33%, 0.65);
-  --highlight:              hsl(240, 10%, 18%);
+  --bg:                     hsla(240, 10%, 20%, 0.65);
+  --fg:                     hsla(240, 10%, 40%, 0.5);
+  --bg-highlight:           hsla(240, 10%, 20%, 1);
+  --fg-highlight:           hsla(240, 20%, 50%, 0.5);
   
   --text:                   hsl(240, 10%, 95%);
 
-  --load-low:               hsl(139, 54%, 53%);
-  --load-medium:            hsl(41, 100%, 77%);
-  --load-high:              hsl(348, 85%, 61%);
+  --load-low:               hsl(140, 55%, 55%);
+  --load-medium:            hsl(40, 100%, 75%);
+  --load-high:              hsl(350, 85%, 60%);
   --load-extreme:           hsl(325, 100%, 25%);
 
-  --load-light-gray:        hsla(223, 28%, 92%, 0.95);
-  --load-gray:              hsla(229, 23%, 80%, 0.85);
-  --load-dark-gray:         hsla(225, 17%, 66%, 0.7);
-  --load-very-dark-gray:    hsla(200, 17%, 50%, 0.25);
+  --load-light-gray:        hsla(225, 30%, 90%, 0.95);
+  --load-gray:              hsla(230, 25%, 80%, 0.85);
+  --load-dark-gray:         hsla(225, 15%, 66%, 0.7);
+  --load-very-dark-gray:    hsla(200, 15%, 50%, 0.25);
 }
 /**/
 
@@ -60,6 +61,7 @@ img {
 button{
   background: transparent;
   border: none !important;
+  pointer-events: auto;
   cursor: pointer;
   padding: 0;
 }
@@ -69,14 +71,21 @@ button{
 .open.hover-details {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   color : var(--load-gray);
   background: var(--fg);
   border-radius: 2em;
-  padding: 0.15rem 0.75rem;
+  padding: 0.75rem;
   margin: 0 0.25em;
   gap: 0.5em;
-  max-width: 50rem;
+  max-width: 25rem;
   transition: opacity 0s, visibility 0s;
+}
+
+.audio.open.hover-details {
+  transform: translateY(-0.5em);
+  background: none !important;
+  padding: 0;
 }
 
 .hover-details {
@@ -85,8 +94,45 @@ button{
   visibility: hidden;
   max-width: 0;
 }
+
+.hover-details:hover{
+  background: var(--fg-highlight);
+  transition: all 0.2s ease;
+}
 /**/
 
+/* Text Bodies */
+.media {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0.25rem 0 0;
+  transform: translateY(0.05rem);
+  max-width: 25rem;
+}
+
+.media.i {
+  transform: translateX(0.25rem) translateY(0.15rem);
+}
+
+.media.rot {
+  transform: rotate(180deg) translateX(-0.25rem) translateY(-0.15rem);
+}
+/**/
+
+/* Resolution Overrides */
+@media (max-width: 1920px) {
+  .i{
+    transform: translateY(0.15em);
+  }
+  
+  .media {
+    transform: translateY(0.1rem);
+  }
+}
+/**/
+  
   /***************/
  /** Main Body **/ 
 /***************/
@@ -114,15 +160,16 @@ body {
 .bg {
   display: inline-flex;
   align-items: center;
+  pointer-events: none;
   background: var(--bg);
-  margin: 0 0.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 1em;
+  margin: 0 0.15rem;
+  padding: 0.5rem 0.5rem;
+  border-radius: 2em;
 }
 
-.bg:hover {
-  background: var(--highlight);
-  border-radius: 0.5em;
+.bg:hover:not(:has(.hover-details:hover))  {
+  background: var(--bg-highlight);
+  border-radius: 0.75em;
 }
 
 /* Structure */
@@ -151,11 +198,11 @@ body {
   width: 1.25rem; height: 1.25rem;
   border-radius: 5em;
   background: var(--bg);
-  margin: 0 1rem;
+  margin: 0 0.5rem;
 }
 
 .ovr:hover {
-  background: var(--highlight);
+  background: var(--bg-highlight);
   transform: scale(1.1) translateY(-0.75em);
 }
 
@@ -166,10 +213,12 @@ body {
 
 .lock.locked {
   background: var(--load-high);
+  transition: all 0.25s ease;
 }
 
 .lock.unlocked {
   background: var(--load-low);
+  transition: all 0.25s ease;
 }
 /**/
 
@@ -198,35 +247,6 @@ body {
 }
 /**/
 
-  /************/
- /** Center **/ 
-/************/
-  
-/* Media Session */
-.media {
-  display: inline-block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transform: translateY(0.05rem);
-  max-width: 30rem;
-}
-
-@media (max-width: 1920px) {
-  .media {
-    transform: translateY(0.1rem);
-  }
-}
-
-
-.media.i {
-  transform: translateY(0.15rem);
-}
-
-.media.rot {
-  transform: rotate(180deg) translateY(-0.15rem);
-}
-
   /***********/
  /** Right **/
 /***********/
@@ -245,12 +265,18 @@ body {
 /* Network */
 .label {
   display: flex;
+  color: var(--text);
+  font-size: 0.45rem;
 }
   
 .label.hover-details {
   flex-direction: column;
   font-size: 0.55rem;
-  gap: 0.25em;
+}
+
+.bg.label {
+  pointer-events: auto;
+  font-size: 0.75rem;
 }
 
 .net-down {

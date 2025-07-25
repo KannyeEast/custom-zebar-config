@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "https://esm.sh/react@18?dev";
 import { createRoot } from "https://esm.sh/react-dom@18/client?dev";
 import * as zebar from "https://esm.sh/zebar@3.0";
+// Import Widgets
+//import { Audio } from "./widgets/Audio";
+// Import Custom Shortcuts
+import { shortcuts } from "./shortcuts.js";
 
 // Set the needed Providers 
 const providers = zebar.createProviderGroup({
@@ -25,7 +29,7 @@ function App() {
     useEffect(() => {
         providers.onOutput(() => setOutput(providers.outputMap));
     }, []);
-
+    
     return (
         <div className="app">
             <LeftPanel output={output} iconSize={iconSize}/>
@@ -233,7 +237,7 @@ function Window({ output }) {
     const cleaned = String(procName.replace(/\.exe$/i, '').trim()).charAt(0).toUpperCase() + procName.slice(1);
     
     return (
-        <div className="bg">
+        <div className="bg label">
             <span title={output.focusedContainer.title}>
                 {cleaned}
             </span>
@@ -244,12 +248,12 @@ function Window({ output }) {
 // Media Session
 function Media({ output, iconSize }) {
     const session = output.currentSession;
-    const { title = 'Unknown Track', artist = 'Unknown Artist', isPlaying } = session || {};
+    const { title, artist, isPlaying } = session || {};
     
     const adjIconSize = iconSize * 0.85;
     
     return (
-        <div className="bg">
+        <div title={title + "ㅤ—ㅤ" + artist} className="bg label" >
             {session ? (
                 <>
                     <button
@@ -291,8 +295,10 @@ function Media({ output, iconSize }) {
                             alt="Skip"
                         />
                     </button>
-                    <span title={title + " — " + artist} className="media ">
-                        {"ㅤ" + title}
+                    <span className="media">
+                        {"ㅤ" + (title != null ? title : "Unknown Track")}
+                    </span>
+                    <span className="media ">
                         {"ㅤ—ㅤ" + (artist != null ? artist : "Unknown Artist")}
                     </span>
                 </>
@@ -336,7 +342,7 @@ function Systray({ output, iconSize }) {
         <div className="bg">
             <button
                 key={isOpen}
-                title={isOpen ? "Close" : "Open"}
+                title={`${isOpen ? "Close" : "Open"} SystemTray`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <img
@@ -376,26 +382,11 @@ function Systray({ output, iconSize }) {
 // Custom Shortcuts
 function ShortcutTray({ glaze, iconSize }) {
     const [isOpen, setIsOpen] = useState(false);
-
-    const shortcuts = [
-        {
-            id: "taskmgr",
-            title: "Task Manager",
-            icon: "./icons/taskmgr-00.png",
-            command: "shell-exec taskmgr"
-        },
-        {
-            id: "project",
-            title: "New Project",
-            icon: "./icons/proj-00.png",
-            command: "shell-exec D:\\00_projects\\_create_project\\main.exe"
-        },
-    ];
-
+    
     return (
         <div className="bg">
             <button
-                title="Shortcuts"
+                title={`${isOpen ? "Close" : "Open"} Shortcuts`}
                 onClick={() => setIsOpen(!isOpen)}
             >
                 <img
@@ -421,13 +412,15 @@ function ShortcutTray({ glaze, iconSize }) {
                             height={iconSize}
                             alt={item.title}
                         />
+                        <span className="label">
+                            {item.title}
+                        </span>
                     </button>
                 ))}
             </span>
         </div>
     );
 }
-
 
 // Audio
 function Audio({ output, iconSize }) {
@@ -445,6 +438,16 @@ function Audio({ output, iconSize }) {
             >
                 {GetIcon("audio", "png", volume, [5, 33, 66], iconSize)}
             </button>
+            {/* cool GIF */}
+            <span className={`audio ${isOpen ? "open" : ""} hover-details label`}>
+                <img
+                    src="./icons/dance-00.gif"
+                    className="i-sys"
+                    width={iconSize * 2}
+                    height={iconSize * 2}
+                    alt="Dance"
+                />
+            </span>
             {/* Display Audio Volume */}
             <span className={`gray ${GetUsage(volume, true)} media`}>
                 [{String(volume).padStart(2, '0')}%]
@@ -633,11 +636,13 @@ function RAM({ output, iconSize }) {
                     alt="RAM"
                 />
             </button>
-            <span className={`${isOpen ? "open" : ""} hover-details`}>
-                [{usedMemory.toFixed(1)}G/{totalMemory.toFixed(1)}G]
-            </span>
-            <span className={`${GetUsage(usage)} media`}>
-                [{String(usage).padStart(2, '0')}%]
+            <span className="media">
+                <span className={`${isOpen ? "open" : ""} hover-details`}>
+                    [{usedMemory.toFixed(1)}G/{totalMemory.toFixed(1)}G]
+                </span>
+                <span className={`${GetUsage(usage)}`}>
+                    [{String(usage).padStart(2, '0')}%]
+                </span>
             </span>
         </div>
     )
